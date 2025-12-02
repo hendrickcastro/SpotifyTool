@@ -1,0 +1,14 @@
+# Spotify API client
+spotipy>=2.23.0
+
+# Spotify downloader - downloads from YouTube with Spotify metadata
+spotdl>=4.2.9
+
+# Rich console output
+rich>=13.7.0
+
+# Environment variables management
+python-dotenv>=1.0.0
+
+# GUI - Modern Tkinter
+customtkinter>=5.2.0

@@ -1,0 +1,14 @@
+# Spotify API Credentials
+# Get your credentials from: https://developer.spotify.com/dashboard
+# Rename this file to .env after filling in your credentials
+
+SPOTIFY_CLIENT_ID=your_client_id_here
+SPOTIFY_CLIENT_SECRET=your_client_secret_here
+
+# Redirect URI for OAuth (don't change unless necessary)
+SPOTIFY_REDIRECT_URI=http://localhost:8888/callback
+
+# Download settings
+DOWNLOAD_PATH=./downloads
+AUDIO_FORMAT=mp3
+AUDIO_QUALITY=320

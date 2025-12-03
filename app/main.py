@@ -7,12 +7,14 @@ from tkinter import messagebox
 import threading
 import subprocess
 import sys
+import os
 from pathlib import Path
 from datetime import datetime
 
 from .constants import COLORS, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT
 from .components import Sidebar, StatusBar
 from .pages import DownloadPage, ConvertPage, VerifyPage, SettingsPage
+from .utils import get_ffmpeg_path, get_ffprobe_path, is_ffmpeg_installed, ensure_ffmpeg
 
 # Log file path
 LOG_FILE = Path(__file__).parent.parent / "spotifytool.log"
@@ -45,6 +47,32 @@ class SpotifyDLApp(ctk.CTk):
         
         # Show default page
         self.show_page("download")
+        
+        # Check FFmpeg on startup
+        self.after(500, self._check_ffmpeg)
+    
+    def _check_ffmpeg(self):
+        """Check and download FFmpeg if needed"""
+        if not is_ffmpeg_installed():
+            self.status_bar.set_status("Downloading FFmpeg...", COLORS['warning'])
+            self.log("download", "[INFO] FFmpeg not found, downloading...")
+            
+            def download_thread():
+                def progress(msg):
+                    self.after(0, lambda m=msg: self.log("download", m))
+                
+                success = ensure_ffmpeg(progress)
+                
+                if success:
+                    self.after(0, lambda: self.status_bar.set_status("FFmpeg ready!", COLORS['success']))
+                else:
+                    self.after(0, lambda: self.status_bar.set_status("FFmpeg download failed", COLORS['error']))
+                    self.after(0, lambda: messagebox.showerror("Error", 
+                        "Failed to download FFmpeg. Please install it manually."))
+            
+            threading.Thread(target=download_thread, daemon=True).start()
+        else:
+            self.status_bar.set_status("Ready", COLORS['text_muted'])
     
     def _create_sidebar(self):
         """Create sidebar"""
@@ -388,14 +416,15 @@ class SpotifyDLApp(ctk.CTk):
             return
         
         self.status_bar.set_status("Verifying...", COLORS['success'])
+        ffprobe_path = get_ffprobe_path()
         
         def verify_thread():
             try:
                 def get_duration(filepath):
-                    cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                    cmd = [ffprobe_path, "-v", "error", "-show_entries", "format=duration",
                            "-of", "default=noprint_wrappers=1:nokey=1", filepath]
                     result = subprocess.run(cmd, capture_output=True, text=True,
-                                          encoding='utf-8', errors='ignore')
+                                          encoding='utf-8', errors='ignore', shell=True)
                     try:
                         return float(result.stdout.strip())
                     except:

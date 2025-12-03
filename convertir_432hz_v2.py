@@ -8,6 +8,7 @@ import subprocess
 import sys
 import os
 import io
+import platform
 from pathlib import Path
 from functools import partial
 
@@ -19,9 +20,24 @@ if sys.platform == 'win32':
 # Force unbuffered print
 print = partial(print, flush=True)
 
+# Project bin directory
+BIN_DIR = Path(__file__).parent / "bin"
+
 
 def find_ffmpeg() -> str:
-    """Find FFmpeg executable"""
+    """Find FFmpeg executable - prioritize local bin folder"""
+    system = platform.system()
+    
+    # First check local bin folder
+    if system == "Windows":
+        local_ffmpeg = BIN_DIR / "ffmpeg.exe"
+    else:
+        local_ffmpeg = BIN_DIR / "ffmpeg"
+    
+    if local_ffmpeg.exists():
+        return str(local_ffmpeg)
+    
+    # Fallback locations
     locations = [
         os.path.expanduser("~/.spotdl/ffmpeg.exe"),
         os.path.expanduser("~/AppData/Local/spotdl/ffmpeg.exe"),
@@ -31,20 +47,24 @@ def find_ffmpeg() -> str:
         r"C:\ProgramData\chocolatey\bin\ffmpeg.exe",
         r"D:\_FFMPEG\bin\ffmpeg.exe",
         os.path.expanduser("~/scoop/apps/ffmpeg/current/bin/ffmpeg.exe"),
-        "ffmpeg",
     ]
     
     for loc in locations:
-        if loc == "ffmpeg":
-            try:
-                result = subprocess.run(["where", "ffmpeg"], capture_output=True, text=True, 
-                                        shell=True, encoding='utf-8', errors='ignore')
-                if result.returncode == 0 and result.stdout.strip():
-                    return result.stdout.strip().split('\n')[0].strip()
-            except:
-                pass
-        elif os.path.exists(loc):
+        if os.path.exists(loc):
             return loc
+    
+    # Try PATH
+    try:
+        if system == "Windows":
+            result = subprocess.run(["where", "ffmpeg"], capture_output=True, text=True, 
+                                    shell=True, encoding='utf-8', errors='ignore')
+        else:
+            result = subprocess.run(["which", "ffmpeg"], capture_output=True, text=True,
+                                    encoding='utf-8', errors='ignore')
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip().split('\n')[0].strip()
+    except:
+        pass
     
     return None
 

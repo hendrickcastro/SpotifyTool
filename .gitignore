@@ -5,6 +5,9 @@ download2/
 432hz_v2/
 *.mp3
 
+# FFmpeg binaries (auto-downloaded)
+bin/
+
 # Python
 __pycache__/
 *.py[cod]

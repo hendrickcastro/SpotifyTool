@@ -1,4 +1,4 @@
-# 🎵 Spotify Playlist Downloader
+# 🎵 SpotifyTool - Music Downloader & 432Hz Converter
 
 Download your Spotify playlists and liked songs as MP3 files.
 

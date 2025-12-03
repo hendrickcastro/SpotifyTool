@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #######################################
-# SPOTIFYDL - Complete Music Tool
+# SpotifyTool - Complete Music Tool
 # Download from Spotify + Convert to 432Hz
 #######################################
 

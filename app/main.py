@@ -1,5 +1,5 @@
 """
-SpotifyTool - Main Application
+Musicalar - Main Application
 """
 
 import customtkinter as ctk
@@ -8,30 +8,31 @@ import threading
 import subprocess
 import sys
 import os
-from pathlib import Path
 from datetime import datetime
 
-from .constants import COLORS, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT
+from .config import (
+    APP_NAME, APP_VERSION, COLORS, MESSAGES,
+    WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT,
+    LOG_FILE
+)
 from .components import Sidebar, StatusBar
 from .pages import DownloadPage, ConvertPage, VerifyPage, SettingsPage
 from .utils import get_ffmpeg_path, get_ffprobe_path, is_ffmpeg_installed, ensure_ffmpeg
-
-# Log file path
-LOG_FILE = Path(__file__).parent.parent / "spotifytool.log"
+from .utils.audio_analyzer import verify_conversion_quality, get_audio_info
 
 # Set appearance
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 
-class SpotifyDLApp(ctk.CTk):
+class MusicalarApp(ctk.CTk):
     """Main Application Window"""
     
     def __init__(self):
         super().__init__()
         
         # Window setup
-        self.title("SpotifyTool")
+        self.title(APP_NAME)
         self.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
         self.minsize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
         
@@ -415,62 +416,170 @@ class SpotifyDLApp(ctk.CTk):
             messagebox.showerror("Error", "Please select both files")
             return
         
-        self.status_bar.set_status("Verifying...", COLORS['success'])
-        ffprobe_path = get_ffprobe_path()
+        self.status_bar.set_status("Analyzing audio...", COLORS['purple'])
         
         def verify_thread():
             try:
-                def get_duration(filepath):
-                    cmd = [ffprobe_path, "-v", "error", "-show_entries", "format=duration",
-                           "-of", "default=noprint_wrappers=1:nokey=1", filepath]
-                    result = subprocess.run(cmd, capture_output=True, text=True,
-                                          encoding='utf-8', errors='ignore', shell=True)
-                    try:
-                        return float(result.stdout.strip())
-                    except:
-                        return 0
+                result = verify_conversion_quality(orig, conv)
                 
-                orig_dur = get_duration(orig)
-                conv_dur = get_duration(conv)
+                if 'error' in result:
+                    error_type = result.get('error', 'unknown')
+                    message = result.get('message', str(result))
+                    
+                    error_text = f"""
+  ╔══════════════════════════════════════════════════════════╗
+  ║                    ❌ VERIFICATION ERROR                  ║
+  ╚══════════════════════════════════════════════════════════╝
+
+  {message}
+
+  ───────────────────────────────────────────────────────────
+  
+  📌 HOW TO USE:
+  
+  1. Select the ORIGINAL file (440Hz standard)
+     Example: "Song Name.mp3"
+  
+  2. Select the CONVERTED file (432Hz)
+     Example: "Song Name_432hz.mp3"
+     Usually in a subfolder like "432hz_v2/"
+
+  The verification compares both files to ensure the
+  conversion was done correctly (same duration, different pitch).
+"""
+                    self.after(0, lambda t=error_text: self.pages["verify"].show_results(t))
+                    self.after(0, lambda: self.status_bar.set_status("❌ Verification Error", COLORS['error']))
+                    return
                 
+                orig_info = result['original']
+                conv_info = result['converted']
+                checks = result['checks']
+                warnings = result.get('warnings', [])
+                
+                # Build results text
                 results = f"""
-  📊 VERIFICATION RESULTS
-  {'═'*50}
+  ╔══════════════════════════════════════════════════════════╗
+  ║           🎵 432Hz CONVERSION VERIFICATION 🎵            ║
+  ╚══════════════════════════════════════════════════════════╝
 
-  📄 Original (440Hz):
-     {Path(orig).name}
-     Duration: {orig_dur:.3f}s
+  📄 ORIGINAL FILE (440Hz Standard):
+  ───────────────────────────────────────────────────────────
+     File:        {orig_info.get('filename', 'Unknown')}
+     Path:        {orig_info.get('filepath', 'Unknown')}
+     Duration:    {orig_info.get('duration_formatted', '0:00')} ({orig_info.get('duration', 0):.3f}s)
+     File Size:   {orig_info.get('file_size_formatted', 'Unknown')}
+     Sample Rate: {orig_info.get('sample_rate', 0)} Hz
+     Bitrate:     {orig_info.get('bitrate', 0)} kbps
+     Channels:    {orig_info.get('channels', 0)} ({orig_info.get('channel_layout', 'unknown')})
+     Codec:       {orig_info.get('codec', 'Unknown')} ({orig_info.get('codec_long', 'Unknown')})
+     Format:      {orig_info.get('format_name', 'Unknown')}
+     Encoder:     {orig_info.get('encoder', 'Unknown')}
 
-  📄 Converted (432Hz):
-     {Path(conv).name}
-     Duration: {conv_dur:.3f}s
+  📄 CONVERTED FILE (432Hz):
+  ───────────────────────────────────────────────────────────
+     File:        {conv_info.get('filename', 'Unknown')}
+     Path:        {conv_info.get('filepath', 'Unknown')}
+     Duration:    {conv_info.get('duration_formatted', '0:00')} ({conv_info.get('duration', 0):.3f}s)
+     File Size:   {conv_info.get('file_size_formatted', 'Unknown')}
+     Sample Rate: {conv_info.get('sample_rate', 0)} Hz
+     Bitrate:     {conv_info.get('bitrate', 0)} kbps
+     Channels:    {conv_info.get('channels', 0)} ({conv_info.get('channel_layout', 'unknown')})
+     Codec:       {conv_info.get('codec', 'Unknown')} ({conv_info.get('codec_long', 'Unknown')})
+     Format:      {conv_info.get('format_name', 'Unknown')}
+     Encoder:     {conv_info.get('encoder', 'Unknown')}
 
+  🔍 VERIFICATION CHECKS:
+  ───────────────────────────────────────────────────────────
 """
-                if orig_dur > 0 and conv_dur > 0:
-                    ratio = conv_dur / orig_dur
-                    results += f"""  Duration Ratio: {ratio:.6f}
-  Expected: ~1.000000
-
-"""
-                    if abs(ratio - 1.0) < 0.02:
-                        results += """  ✅ SUCCESS!
-  • Durations match (tempo preserved)
-  • Pitch should be shifted to 432Hz
-
-  👂 To verify aurally:
-  1. Play both files back-to-back
-  2. The 432Hz version sounds LOWER in pitch
-  3. But plays at the SAME SPEED
-"""
-                        self.after(0, lambda: self.status_bar.set_status("Verification: SUCCESS!", COLORS['success']))
-                    else:
-                        results += f"  ⚠️ Duration ratio differs from 1.0"
-                        self.after(0, lambda: self.status_bar.set_status("Verification: Warning", COLORS['warning']))
+                for check_name, passed, detail in checks:
+                    status = "✅" if passed else "❌"
+                    results += f"     {status} {check_name}: {detail}\n"
                 
-                self.after(0, lambda: self.pages["verify"].show_results(results))
+                # Add warnings if any
+                if warnings:
+                    results += f"""
+  ⚠️ WARNINGS:
+  ───────────────────────────────────────────────────────────
+"""
+                    for warning in warnings:
+                        results += f"     ⚠️ {warning}\n"
+                
+                results += f"""
+  📊 PITCH SHIFT ANALYSIS:
+  ───────────────────────────────────────────────────────────
+     Pitch Ratio: 432/440 = {432/440:.6f}
+     
+     All frequencies multiplied by this ratio:
+     • A4: 440.00 Hz → 432.00 Hz (standard tuning reference)
+     • C4: 261.63 Hz → 256.87 Hz  
+     • E4: 329.63 Hz → 323.63 Hz
+     • G4: 392.00 Hz → 384.87 Hz
+
+"""
+                # Add metadata comparison if available
+                orig_tags = orig_info.get('tags', {})
+                conv_tags = conv_info.get('tags', {})
+                
+                if orig_tags or conv_tags:
+                    results += """
+  🏷️ METADATA:
+  ───────────────────────────────────────────────────────────
+"""
+                    # Show common tags
+                    for tag in ['title', 'artist', 'album', 'date', 'genre']:
+                        orig_val = orig_tags.get(tag, '-')
+                        results += f"     {tag.capitalize():12} {orig_val}\n"
+                
+                if result['all_passed']:
+                    results += """
+  ══════════════════════════════════════════════════════════
+  ✅ VERIFICATION PASSED
+  ══════════════════════════════════════════════════════════
+  
+  What we verified:
+  ✓ Files are different (not copies)
+  ✓ Duration matches (tempo preserved correctly)
+  ✓ Sample rate unchanged
+  ✓ File integrity OK
+  
+  ⚠️ TECHNICAL LIMITATION:
+  It's impossible to "measure" if audio is in 432Hz because
+  music contains thousands of frequencies simultaneously.
+  There's no "base frequency" stored in the file.
+  
+  What the conversion DOES:
+  • Multiplies ALL frequencies by 432/440 = 0.9818
+  • Preserves tempo using rubberband algorithm
+  
+  👂 THE ONLY REAL TEST - Listen:
+  Play both files back-to-back. The 432Hz version should:
+  • Sound slightly LOWER in pitch
+  • Play at the SAME SPEED
+  • Feel "warmer" (subjective)
+
+  ───────────────────────────────────────────────────────────
+  Report generated by Musicalar v1.0.0
+"""
+                    self.after(0, lambda: self.status_bar.set_status("✓ Verification PASSED!", COLORS['success']))
+                else:
+                    results += """  ══════════════════════════════════════════════════════════
+  ⚠️ VERIFICATION WARNING
+  ══════════════════════════════════════════════════════════
+  
+  Some checks failed. Possible issues:
+  • Files might not be original/converted pair
+  • Conversion may have used different settings
+  • Files may be corrupted
+"""
+                    self.after(0, lambda: self.status_bar.set_status("⚠ Verification: Issues found", COLORS['warning']))
+                
+                self.after(0, lambda r=results: self.pages["verify"].show_results(r))
                 
             except Exception as e:
-                self.after(0, lambda: self.pages["verify"].show_results(f"Error: {str(e)}"))
+                import traceback
+                tb = traceback.format_exc()
+                self.after(0, lambda: self.pages["verify"].show_results(f"Error: {str(e)}\n\n{tb}"))
+                self.after(0, lambda: self.status_bar.set_status("Verification failed", COLORS['error']))
         
         threading.Thread(target=verify_thread, daemon=True).start()
     
@@ -506,7 +615,7 @@ class SpotifyDLApp(ctk.CTk):
 
 def run():
     """Run the application"""
-    app = SpotifyDLApp()
+    app = MusicalarApp()
     app.mainloop()
 
 

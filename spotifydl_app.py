@@ -1,5 +1,5 @@
 """
-SpotifyTool - Desktop Application
+Musicalar - Desktop Application
 Download from Spotify + Convert to 432Hz
 
 Run this file to start the application.

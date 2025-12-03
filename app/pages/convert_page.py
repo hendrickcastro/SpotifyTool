@@ -4,7 +4,7 @@ Convert to 432Hz page
 
 import customtkinter as ctk
 from .base_page import BasePage
-from ..constants import COLORS
+from ..config import COLORS, SIZES, AUDIO
 from ..components.log_widget import LogWidget
 
 

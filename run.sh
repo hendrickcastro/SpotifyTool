@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #######################################
-# SpotifyTool - Complete Music Tool
+# Musicalar - Complete Music Tool
 # Download from Spotify + Convert to 432Hz
 #######################################
 

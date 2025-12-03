@@ -3,7 +3,7 @@ Sidebar navigation component
 """
 
 import customtkinter as ctk
-from ..constants import COLORS, APP_NAME
+from ..config import COLORS, APP_NAME, NAV_ITEMS, SIZES, FONTS
 
 
 class Sidebar(ctk.CTkFrame):

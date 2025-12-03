@@ -3,7 +3,7 @@ Log output widget component
 """
 
 import customtkinter as ctk
-from ..constants import COLORS
+from ..config import COLORS, SIZES, FONTS
 
 
 class LogWidget(ctk.CTkFrame):

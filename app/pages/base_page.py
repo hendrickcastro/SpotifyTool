@@ -4,7 +4,7 @@ Base page class
 
 import customtkinter as ctk
 from tkinter import filedialog
-from ..constants import COLORS
+from ..config import COLORS, FONTS, SIZES
 
 
 class BasePage(ctk.CTkFrame):

@@ -4,7 +4,7 @@ Download page
 
 import customtkinter as ctk
 from .base_page import BasePage
-from ..constants import COLORS
+from ..config import COLORS, SIZES, DOWNLOAD
 from ..components.log_widget import LogWidget
 
 

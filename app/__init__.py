@@ -1,4 +1,4 @@
 """
-SpotifyTool App Package
+Musicalar App Package
 """
 

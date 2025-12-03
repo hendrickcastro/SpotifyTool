@@ -5,7 +5,7 @@ Settings page
 import customtkinter as ctk
 from tkinter import messagebox
 from .base_page import BasePage
-from ..constants import COLORS, APP_VERSION
+from ..config import COLORS, APP_NAME, APP_VERSION, APP_DESCRIPTION, APP_AUTHOR
 from ..utils.config_manager import config_manager
 
 
@@ -219,14 +219,16 @@ class SettingsPage(BasePage):
             font=ctk.CTkFont(size=16, weight="bold")
         ).pack(padx=25, pady=(20, 10), anchor="w")
         
-        about_text = f"""SpotifyTool v{APP_VERSION}
+        about_text = f"""{APP_NAME} v{APP_VERSION}
 
-A powerful tool to download music from Spotify and convert it to 432Hz.
+{APP_DESCRIPTION}
 
 • Download playlists, albums, and tracks
-• High-quality 432Hz pitch conversion
+• High-quality 432Hz pitch conversion  
 • Cross-platform (Windows, Mac, Linux)
+• Audio verification tools
 
+Developed by {APP_AUTHOR}
 Built with Python, CustomTkinter, spotdl, and FFmpeg"""
         
         ctk.CTkLabel(

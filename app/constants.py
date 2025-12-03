@@ -1,48 +1,54 @@
+# -*- coding: utf-8 -*-
 """
-Application constants and color scheme
+Application constants - Re-exports from config.py for backward compatibility
+All new code should import from app.config directly
 """
 
-# Color palette
-COLORS = {
-    # Spotify brand
-    "spotify_green": "#1DB954",
-    "spotify_green_hover": "#1ed760",
-    "spotify_dark": "#191414",
+from .config import (
+    # App info
+    APP_NAME,
+    APP_VERSION,
+    APP_DESCRIPTION,
     
-    # Purple accent
-    "purple": "#8B5CF6",
-    "purple_hover": "#7C3AED",
+    # Paths
+    APP_DIR,
+    ROOT_DIR,
+    BIN_DIR,
+    LOG_FILE,
+    CONFIG_FILE,
+    DEFAULT_DOWNLOAD_DIR,
     
-    # Status colors
-    "success": "#10B981",
-    "success_hover": "#059669",
-    "warning": "#F59E0B",
-    "error": "#EF4444",
+    # Window
+    WINDOW_WIDTH,
+    WINDOW_HEIGHT,
+    WINDOW_MIN_WIDTH,
+    WINDOW_MIN_HEIGHT,
     
-    # Backgrounds
-    "bg_dark": "#0f0f0f",
-    "bg_card": "#1a1a1a",
-    "bg_card_hover": "#252525",
+    # Colors
+    COLORS,
     
-    # Text
-    "text_primary": "#ffffff",
-    "text_muted": "#6b7280",
+    # Fonts
+    FONTS,
     
-    # Borders
-    "border": "#2d2d2d",
-}
+    # Sizes
+    SIZES,
+    
+    # Audio
+    AUDIO,
+    
+    # Download
+    DOWNLOAD,
+    
+    # Navigation
+    NAV_ITEMS,
+    
+    # Messages
+    MESSAGES,
+    
+    # Helpers
+    get_color,
+    get_font_size,
+)
 
-# App info
-APP_NAME = "SpotifyTool"
-APP_VERSION = "1.0.0"
-APP_DESCRIPTION = "Download from Spotify + Convert to 432Hz"
-
-# Window settings
-WINDOW_WIDTH = 1000
-WINDOW_HEIGHT = 750
-WINDOW_MIN_WIDTH = 900
-WINDOW_MIN_HEIGHT = 700
-
-# 432Hz conversion
-PITCH_RATIO = 432 / 440  # = 0.981818...
-
+# Legacy constant for backward compatibility
+PITCH_RATIO = AUDIO["pitch_ratio"]

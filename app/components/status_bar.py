@@ -3,7 +3,7 @@ Status bar component
 """
 
 import customtkinter as ctk
-from ..constants import COLORS, APP_VERSION
+from ..config import COLORS, APP_VERSION, MESSAGES
 
 
 class StatusBar(ctk.CTkFrame):
@@ -15,7 +15,7 @@ class StatusBar(ctk.CTkFrame):
         
         self.status_label = ctk.CTkLabel(
             self, 
-            text="Ready",
+            text=MESSAGES["ready"],
             font=ctk.CTkFont(size=11),
             text_color=COLORS['text_muted']
         )

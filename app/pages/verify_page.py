@@ -4,7 +4,7 @@ Verify conversion page
 
 import customtkinter as ctk
 from .base_page import BasePage
-from ..constants import COLORS
+from ..config import COLORS, SIZES
 
 
 class VerifyPage(BasePage):
@@ -22,6 +22,7 @@ class VerifyPage(BasePage):
         
         self._create_card()
         self._create_results()
+        self._create_copy_button()
     
     def _create_card(self):
         """Create input card"""
@@ -90,6 +91,36 @@ class VerifyPage(BasePage):
             fg_color=COLORS['bg_card']
         )
         self.results.grid(row=2, column=0, sticky="nsew")
+    
+    def _create_copy_button(self):
+        """Create copy to clipboard button"""
+        btn_frame = ctk.CTkFrame(self, fg_color="transparent")
+        btn_frame.grid(row=3, column=0, sticky="e", pady=(10, 0))
+        
+        self.copy_btn = ctk.CTkButton(
+            btn_frame,
+            text="📋 Copy to Clipboard",
+            font=ctk.CTkFont(size=13),
+            height=35,
+            corner_radius=8,
+            fg_color=COLORS['bg_card'],
+            hover_color=COLORS['bg_card_hover'],
+            command=self._copy_to_clipboard
+        )
+        self.copy_btn.pack(side="right")
+    
+    def _copy_to_clipboard(self):
+        """Copy results to clipboard"""
+        content = self.results.get("1.0", "end").strip()
+        if content:
+            self.clipboard_clear()
+            self.clipboard_append(content)
+            
+            # Show feedback
+            original_text = self.copy_btn.cget("text")
+            self.copy_btn.configure(text="✓ Copied!", fg_color=COLORS['success'])
+            self.after(2000, lambda: self.copy_btn.configure(
+                text=original_text, fg_color=COLORS['bg_card']))
     
     def _start_verify(self):
         """Handle verify button click"""
